@@ -22,16 +22,24 @@ public class PingPongClient {
         InetSocketAddress skeletonSocket = new InetSocketAddress(skeletonHostname, skeletonPort);
         PingPongServerFactory pFactory = Stub.create(PingPongServerFactory.class, skeletonSocket);
 
+        PingPongServer pServer = null;
+        try {
+            pServer = pFactory.makePingPongServer();
+
+        } catch (RMIException e) {
+            e.printStackTrace();
+        }
+
         // invoke the makePingServer in the pFactory and get the remote object (PingPongServer)
         int fail = 0;
         for (int i = 0; i < TEST_ROUND; i++) {
             try {
-                PingPongServer pServer = pFactory.makePingPongServer();
+
                 String result = pServer.ping(i);
                 if (!result.equals("pong" + i)) {
                     fail++;
                 }
-            } catch (RMIException e) {
+            } catch (Exception e) {
                 fail++;
             }
         }
