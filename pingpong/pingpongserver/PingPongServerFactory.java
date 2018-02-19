@@ -1,5 +1,7 @@
 package pingpong.pingpongserver;
 
+import rmi.RMIException;
+
 public interface PingPongServerFactory {
-    PingPongServer makePingPongServer();
+    PingPongServer makePingPongServer() throws RMIException;
 }

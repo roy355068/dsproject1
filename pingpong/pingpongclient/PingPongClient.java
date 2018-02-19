@@ -2,6 +2,8 @@ package pingpong.pingpongclient;
 
 import pingpong.pingpongserver.PingPongServer;
 import pingpong.pingpongserver.PingPongServerFactory;
+
+import rmi.RMIException;
 import rmi.Stub;
 
 import java.net.InetSocketAddress;
@@ -21,11 +23,20 @@ public class PingPongClient {
         PingPongServerFactory pFactory = Stub.create(PingPongServerFactory.class, skeletonSocket);
 
         // invoke the makePingServer in the pFactory and get the remote object (PingPongServer)
-        PingPongServer pServer = pFactory.makePingPongServer();
-
-        for (int i = 0 ; i < TEST_ROUND ; i ++) {
-            pServer.ping(i);
+        int fail = 0;
+        for (int i = 0; i < TEST_ROUND; i++) {
+            try {
+                PingPongServer pServer = pFactory.makePingPongServer();
+                String result = pServer.ping(i);
+                if (!result.equals("pong" + i)) {
+                    fail++;
+                }
+            } catch (RMIException e) {
+                fail++;
+            }
         }
+
+        System.out.println(TEST_ROUND + " Tests completed, " + fail + " Tests Failed.");
 
     }
 }
