@@ -67,7 +67,7 @@ public class Skeleton<T>
     // c is the object of the class of the interface -> so c must be an interface type
     // an object implementing the said interface
     public Skeleton(Class<T> c, T server) throws Error, NullPointerException {
-//         if c is not interface, throw exception
+        // if c is not interface, throw exception
         validate(c, server);
         this.server = server;
         this.IClass = c;
@@ -104,14 +104,29 @@ public class Skeleton<T>
         }
     }
 
+    /**
+     * Getter of the address of the socket.
+     * @return inetsocketaddress
+     */
     public InetSocketAddress getAddress() {
         return this.socketAddress;
     }
 
+    /**
+     * Getter of the port number.
+     * @return the port number
+     */
     public int getPort() {
         return this.port;
     }
 
+    /**
+     * Validate the input of Skeleton constructors. If c is not a interface, then throw Error.
+     * If c or the input server is null, then throw NullPointerException. Or, if any of the class
+     * doesn't implement Remote, throw RMIException.
+     * @param c Class of the interface
+     * @param server server
+     */
     private void validate(Class<T> c, T server) {
         if (!c.isInterface()) {
             throw new Error("The type of c is not interface, the skeleton creation will be rejected");
@@ -249,7 +264,14 @@ public class Skeleton<T>
         }
     }
 
+    /**
+     * ListenThread: It's a thread which create new thread each time the request comes.
+     * There is exactly one listen thread.
+     */
     private class ListenThread extends Thread {
+        /**
+         * Flag to indicate whether listen thread is running.
+         */
         private boolean live = true;
         private ServerSocket serverSocket;
         private Class<T> IClass;
@@ -281,7 +303,7 @@ public class Skeleton<T>
                         serviceThread.start();
 
                     } catch (NullPointerException e) {
-//                        System.out.println("service is down");
+                     //System.out.println("service is down");
                         System.out.print("");
                     }
                 }
@@ -297,7 +319,11 @@ public class Skeleton<T>
         }
     }
 
-
+    /**
+     * ServiceThread: It's the thread been created each time a new client call come.
+     * And service thread is the thread which actually handle the request, get the remote
+     * method and handle the response.
+     */
     private class ServiceThread extends Thread {
         private Socket socket;
         private Class<T> IClass;
@@ -320,6 +346,8 @@ public class Skeleton<T>
                 out.flush();
                 in = new ObjectInputStream(this.socket.getInputStream());
 
+                // Wrap the request to a RemoteObject object which implements serializable.
+                // And get the method, parameters and any required input to call the remote method.
                 RemoteObject request = (RemoteObject) in.readObject();
                 String methodName = request.getMethodName();
                 Class<T> [] parameterTypes = request.getParameterTypes();
@@ -329,7 +357,8 @@ public class Skeleton<T>
                 Method method = this.IClass.getMethod(methodName, parameterTypes);
 
                 try {
-                    // here we invoke the real method on the server object
+                    // here we invoke the real method on the server object.
+                    // If the returnType is void then return null.
                     result = returnType.toString().equals("Void") ? null : method.invoke(server, args);
                     statusString = result == null ? "void" : "SUCCESS";
 
@@ -342,8 +371,8 @@ public class Skeleton<T>
                 service_error(new RMIException(e));
 
             } finally {
-//                workerThreads.remove(this);
                 try {
+                    // Write the method result to response.
                     response = new RemoteObject(statusString, result);
                     out.writeObject(response);
                     out.flush();

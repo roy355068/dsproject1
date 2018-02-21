@@ -13,13 +13,17 @@ public class PingPongTest {
 
         try {
             InetSocketAddress inet = new InetSocketAddress(InetAddress.getLocalHost().getHostName(), 80);
-            skeleton = new Skeleton<PingPongServerFactory>(PingPongServerFactory.class, factory, inet);
+            skeleton = new Skeleton<>(PingPongServerFactory.class, factory, inet);
 
             skeleton.start();
 
         } catch (Exception e) {
             e.printStackTrace();
-            skeleton.stop();
+            try {
+                skeleton.stop();
+            } catch (NullPointerException e1) {
+                e1.printStackTrace();
+            }
         }
     }
 }

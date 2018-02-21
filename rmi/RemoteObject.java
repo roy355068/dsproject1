@@ -8,18 +8,45 @@ import java.lang.reflect.Method;
  * transmit through the network
  */
 class RemoteObject implements Serializable {
+    /**
+     * Name of the method on remote object which been called.
+     */
     private String methodName;
+    /**
+     * An array of class of the types of parameters.
+     */
     private Class[] parameterTypes;
+    /**
+     * The input arguments of the method.
+     */
     private Object[] args;
+    /**
+     * The method on the remote object which been called.
+     */
     private Method method;
+    /**
+     * The returnType of the remote method.
+     */
     private Class returnType;
 
 
+    /**
+     * Return value.
+     */
     private Object returnValue;
+    /**
+     * Return status, which could be "success" or "failed".
+     */
     private String responseStatus;
 
 
-    // Used when stub construct the request
+    /**
+     * Used when stub construct the request.
+     * @param methodName name of the method been called
+     * @param parameterTypes array of class of the input parameters
+     * @param args array of the input parameters
+     * @param returnType type of the return value.
+     */
     RemoteObject(String methodName, Class[] parameterTypes, Object[] args, Class returnType) {
         this.methodName = methodName;
         this.parameterTypes = parameterTypes;
@@ -27,7 +54,11 @@ class RemoteObject implements Serializable {
         this.returnType = returnType;
     }
 
-    // Used when skeleton construct the response
+    /**
+     * Used when skeleton construct the response.
+     * @param responseStatus response state, whether is "success" or "failed"
+     * @param returnValue responded value from remote method call
+     */
     RemoteObject(String responseStatus, Object returnValue) {
         this.returnValue = returnValue;
         this.responseStatus = responseStatus;

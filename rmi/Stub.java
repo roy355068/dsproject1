@@ -55,15 +55,20 @@ public abstract class Stub
         throws UnknownHostException {
         validation(c, new Object [] {skeleton});
 
+        // Check if the input address is assigned, else throw UnknownHostException
         if (InetAddress.getLocalHost().getHostAddress() == null) {
             throw new UnknownHostException();
         }
 
+        // If the skeleton has not been assigned an address by the user and has not yet
+        // been started, throw IllegalStateException.
         InetSocketAddress skeletonAddress = skeleton.getAddress();
         if (skeletonAddress == null) {
             throw new IllegalStateException("Skeleton has not been initialized");
         }
 
+        // After validation of input, create new DynamicHandler which then be used
+        // to create new proxy for the connection with skeleton.
         InvocationHandler handler = new DynamicHandler(skeletonAddress, c);
         return createProxy(handler, c);
     }
@@ -101,7 +106,7 @@ public abstract class Stub
     public static <T> T create(Class<T> c, Skeleton<T> skeleton,
                                String hostname) {
 
-        // pack the arguments
+        // pack the arguments and validate the input
         Object [] args = new Object [] {skeleton, hostname};
         validation(c, args);
 
@@ -113,6 +118,8 @@ public abstract class Stub
             throw new IllegalStateException("The skeleton has not been assigned a port");
         }
 
+        // After validation of input, create new DynamicHandler which then be used
+        // to create new proxy for the connection with skeleton.
         InetSocketAddress overwrittenAddress = new InetSocketAddress(hostname, skeletonPort);
         InvocationHandler handler = new DynamicHandler(overwrittenAddress, c);
         return createProxy(handler, c);
@@ -140,6 +147,9 @@ public abstract class Stub
     public static <T> T create(Class<T> c, InetSocketAddress address) {
         Object [] args = new Object [] {address};
         validation(c, args);
+
+        // After validation of input, create new DynamicHandler which then be used
+        // to create new proxy for the connection with skeleton.
         InvocationHandler handler = new DynamicHandler(address, c);
         return createProxy(handler, c);
     }
@@ -169,13 +179,14 @@ public abstract class Stub
                     }
                 }
 
+                // To check if the interface implement Remote.
                 if (!isRMI) {
                     throw new Error("The interface is not a remote interface, proxy creation rejected");
                 }
             }
         }
 
-        // check if any arg in args is null
+        // check if any arg in args is null, else throw NullPointerException
         for (Object arg : args) {
             if (arg == null) {
                 throw new NullPointerException("One of the arguments in args is null, reject the proxy creation");
