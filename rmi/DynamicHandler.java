@@ -12,6 +12,26 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
+/*
+
+    - https://docs.oracle.com/javase/7/docs/technotes/guides/reflection/proxy.html
+    Official documentation of Proxy class
+
+    - http://paddy-w.iteye.com/blog/841798
+    A Chinese website explaining how to use InvocationHandler to perform proxy generation
+    and method invocation
+
+    - https://docs.oracle.com/javase/tutorial/java/IandI/objectclass.html
+    - http://www.logicbig.com/how-to/code-snippets/jcode-reflection-class-getmethod/
+    Use these two reference to get the entity of the three methods (equals, hashCode, toString)
+
+*/
+
+/**
+ * DynamicHandler is an implementing class that implements InvocationHandler and Serializable and will be
+ * used as invocation handler in the proxy creation
+ * @param <T> type of the interface we are going to implement
+ */
 class DynamicHandler<T> implements InvocationHandler, Serializable {
 
     private Class<T> interfaceClass;
@@ -26,13 +46,17 @@ class DynamicHandler<T> implements InvocationHandler, Serializable {
         this.port = this.address.getPort();
     }
 
-    /* https://docs.oracle.com/javase/7/docs/technotes/guides/reflection/proxy.html
-
-    http://paddy-w.iteye.com/blog/841798 - A Chinese website explaining how to use
-     InvocationHandler to perform proxy generation and method invoke
-
-    three bulit-in functions
-    */
+    /**
+     * Overriding the invoke method in the InvocationHandler interface
+     * @param proxy the proxy instance that the method was invoked on
+     * @param method the Method instance corresponding to the interface method invoked on the proxy instance.
+     *               The declaring class of the Method object will be the interface that the method was declared in,
+     *               which may be a superinterface of the proxy interface that the proxy class inherits the method through.
+     * @param args an array of objects containing the values of the arguments passed in the method invocation on the proxy
+     *             instance, or null if interface method takes no arguments.
+     * @return the value to return from the method invocation on the proxy instance.
+     * @throws Throwable the exception to throw from the method invocation on the proxy instance.
+     */
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
@@ -49,8 +73,6 @@ class DynamicHandler<T> implements InvocationHandler, Serializable {
         Method equalsMethod = objClass.getMethod("equals", Object.class);
         Method toStringMethod = objClass.getMethod("toString", null);
 
-
-        // TODO :
         if (methodName == "equals" && method.equals(equalsMethod)) {
             if (args[0] instanceof Proxy) {
                 DynamicHandler handler = (DynamicHandler) Proxy.getInvocationHandler((Proxy) args[0]);
@@ -74,19 +96,23 @@ class DynamicHandler<T> implements InvocationHandler, Serializable {
                 socket = new Socket();
                 socket.connect(this.address, this.port);
 
+                // out.flush() before instantiate in to avoid deadlock
                 out = new ObjectOutputStream(socket.getOutputStream());
                 out.flush();
                 in = new ObjectInputStream(socket.getInputStream());
 
+                // pack the essential data for method invocation into a RemoteObject object and send it
                 RemoteObject request = new RemoteObject(methodName, paraTypes, args, returnType);
                 out.writeObject(request);
                 out.flush();
 
+                // unpack the returning response and extract the statusString and returnValue
                 RemoteObject response = (RemoteObject) in.readObject();
                 String statusString = response.getResponseStatus();
                 Object returnValue = response.getReturnValue();
 
-                if (statusString.equals("FAILED")) {
+                // check the statusString and execute corresponding error handling or value returning
+                if (statusString.equals("failed")) {
                     throw (Exception) returnValue;
                 } else {
                     in.close();

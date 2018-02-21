@@ -331,11 +331,11 @@ public class Skeleton<T>
                 try {
                     // here we invoke the real method on the server object
                     result = returnType.toString().equals("Void") ? null : method.invoke(server, args);
-                    statusString = result == null ? "void" : "SUCCESS";
+                    statusString = result == null ? "void" : "success";
 
                 } catch (InvocationTargetException e) {
                     result = e.getTargetException();
-                    statusString = "FAILED";
+                    statusString = "failed";
 
                 }
             } catch (Exception e) {
